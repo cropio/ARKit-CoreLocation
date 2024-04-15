@@ -24,6 +24,8 @@ public enum ScalingScheme {
     case doubleTiered(firstThreshold: Double, firstScale: Float, secondThreshold: Double, secondScale: Float)
     case linear(threshold: Double)
     case linearBuffer(threshold: Double, buffer: Double)
+    case interpolate(minDistance: Double, minScale: Double, maxDistance: Double, maxScale: Double, cutToMinMax: Bool)
+    case exponentialInterpolation(startDistance: Double, endDistance: Double, startScale: Double, endScale: Double, k: Double)
 
     /// Returns a closure to compute appropriate scale factor based on the current value of `self` (a `ScalingSchee`).
     /// The closure accepts two parameters and returns the scale factor to apply to an `AnnotationNode`.
@@ -84,8 +86,20 @@ public enum ScalingScheme {
                 }
                 return scale
             }
+        case .interpolate(let minDistance, let minScale, let maxDistance, let maxScale, let cutToMinMax):
+            return { (distance, adjustedDistance) in
+
+                let clampedDistance = cutToMinMax ? min(max(minDistance, distance), maxDistance) : distance
+                let scale =  minScale + (clampedDistance - minDistance) * (maxScale - minScale) / (maxDistance - minDistance)
+
+                return Float(scale)
+            }
+        case .exponentialInterpolation(let startDistance, let endDistance, let startScale, let endScale, let k):
+            return { (distance, adjustedDistance) in
+                let t = (distance - startDistance) / (endDistance - startDistance)
+                let scale = startScale + (endScale - startScale) * (1 - exp(-k * t))
+                return Float(scale)
+            }
         }
-
     }
-
 }

@@ -47,11 +47,15 @@ open class LocationAnnotationNode: LocationNode {
     ///   - location:The location of the node in the world.
     ///   - view:The view to display at the specified location.
     public convenience init(location: CLLocation?, view: UIView) {
-        self.init(location: location, image: view.image)
+        self.init(location: location, image: view.toImage)
     }
 
-    public init(location: CLLocation?, layer: CALayer) {
-        let plane = SCNPlane(width: layer.bounds.size.width / 100, height: layer.bounds.size.height / 100)
+    public convenience init(location: CLLocation?, layer: CALayer) {
+        self.init(location: location, layer: layer, size: layer.bounds.size)
+    }
+
+    public init(location: CLLocation?, layer: CALayer, size: CGSize) {
+        let plane = SCNPlane(width: size.width / 100, height: size.height / 100)
         plane.firstMaterial?.diffuse.contents = layer
         plane.firstMaterial?.lightingModel = .constant
 
@@ -125,15 +129,14 @@ open class LocationAnnotationNode: LocationNode {
 
 // MARK: - Image from View
 
-public extension UIView {
+extension UIView {
 
     @available(iOS 10.0, *)
     /// Gets you an image from the view.
-    var image: UIImage {
+    var toImage: UIImage {
         let renderer = UIGraphicsImageRenderer(bounds: bounds)
         return renderer.image { rendererContext in
             layer.render(in: rendererContext.cgContext)
         }
     }
-
 }
